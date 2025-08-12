@@ -1,15 +1,5 @@
 import type { NextRequest } from "next/server"
-
-import postgres from "postgres"
-
-const sql = postgres({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT || "5432"),
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-})
+import { sql } from "@vercel/postgres"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -23,6 +13,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+
+    process.env.POSTGRES_URL = connectionString
+
     await sql`
       UPDATE gestion_courier 
       SET statut = 'traite', "update" = NOW()
@@ -41,10 +35,3 @@ export async function GET(request: NextRequest) {
     })
   }
 }
-
-// This endpoint matches your Python Flask code exactly:
-// @app.route('/api/traiter', methods=['GET'])
-// - Uses GET method with query parameter 'ref'
-// - Returns HTML responses directly
-// - Same database connection and SQL query structure
-// - Uses your exact environment variables
